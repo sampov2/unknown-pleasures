@@ -58,10 +58,9 @@ def find_right_path(obj):
 	return None
 
 
-def analyse_and_extract_path(path, height = 30, zOffset = 0, xOffset = 0, yOffset = 0):
+def analyse_and_extract_path(path):
 	points = path.getProperties()['points']
 
-	print("offsets (x, y, z) = ({}, {}, {})".format(xOffset, yOffset, zOffset))
 	miny =  100000
 	maxy = -100000
 	avgy = 0
@@ -85,25 +84,6 @@ def analyse_and_extract_path(path, height = 30, zOffset = 0, xOffset = 0, yOffse
 		'maxy': maxy,
 		'avgy': avgy,
 		'points2d': points2d
-	}
-
-def crap():
-	i = 0
-	while i < len(points):
-		x = points[i+0]
-		y = points[i+1]
-		#if y < (miny+10):
-		#	y -= 100
-		#if y > (maxy-10):
-		#	y += 100
-		i += 2
-	print('min-max y = {}, {}'.format(miny, maxy))
-	polygon = Polygon(points2d)
-	return {
-		'miny': miny,
-		'maxy': maxy,
-		'avgy': avgy,
-		'mesh': trimesh.creation.extrude_polygon(polygon, height+zOffset)
 	}
 
 def load_and_extract(file):
@@ -131,11 +111,10 @@ def load_and_extract(file):
 
 	n = 0
 	for i in group_of_groups.getContents():
-		print("processing object")
+		#print("processing object")
 		path = find_right_path(i)
 		if path != None:
 			try:
-				print("extrude")
 				obj = analyse_and_extract_path(path)
 				objects.append(obj)
 				n += 1
@@ -149,9 +128,9 @@ def load_and_extract(file):
 
 objects = load_and_extract(inputFile)
 
-objects.sort(key=lambda o : o['avgy'])
+objects.sort(key=lambda o : o['maxy'])
 
-objects = objects[0:6]
+objects = objects[0:5]
 
 
 zOffset = 5
@@ -171,7 +150,7 @@ for obj in objects:
 		if y > yThreshold:
 			y += yExtension
 		adjusted_points.append([x, y])
-	print(adjusted_points)
+
 	polygon = Polygon(adjusted_points)
 	tmp = trimesh.creation.extrude_polygon(polygon, height + zOffset*n) #, height+zOffset)
 	meshes.append(tmp)
