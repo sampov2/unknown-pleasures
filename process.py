@@ -156,28 +156,26 @@ objects = objects[0:6]
 
 zOffset = 5
 height = 10
+yExtension = 20
 n = 0
 meshes = []
 for obj in objects:
-	polygon = Polygon(obj['points2d'])
+	print('object #{}: miny = {}, height = {}'.format(n, obj['miny'], obj['maxy']-obj['miny']))
+	points2d = obj['points2d']
+	adjusted_points = []
+
+	yThreshold = obj['maxy']-1
+	for point in points2d:
+		x = point[0]
+		y = point[1]
+		if y > yThreshold:
+			y += yExtension
+		adjusted_points.append([x, y])
+	print(adjusted_points)
+	polygon = Polygon(adjusted_points)
 	tmp = trimesh.creation.extrude_polygon(polygon, height + zOffset*n) #, height+zOffset)
 	meshes.append(tmp)
 	n += 1
-
-#foo = (objects[0], objects[1], objects[2])
-#foo = objects[0:6] # works okay
-
-
-#foo = map(lambda f : f['mesh'], foo)
-
-#foo = objects[5:8] # shows only two..
-#foo = objects[6:8] # shows two..
-#foo = objects[6:9] # shows two..
-#foo = objects[6:10] # shows two..
-
-#foo = objects
-
-#foo = objects[1:7] # horribly broken
 
 mesh = trimesh.boolean.union(meshes, 'blender')
 #mesh.fix_normals()
