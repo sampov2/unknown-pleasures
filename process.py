@@ -57,23 +57,56 @@ def find_right_path(obj):
 				return ret
 	return None
 
-def extrude_svg_path(path, height = 30, zOffset = 0, xOffset = 0, yOffset = 0):
-	points2d = path.getProperties()['points']
 
-	points3d = []
-	i = 0
+def analyse_and_extract_path(path, height = 30, zOffset = 0, xOffset = 0, yOffset = 0):
+	points = path.getProperties()['points']
+
 	print("offsets (x, y, z) = ({}, {}, {})".format(xOffset, yOffset, zOffset))
-	while i < len(points2d):
-		points3d.append(
-			(points2d[i+0]+ xOffset, 
-			 points2d[i+1] + yOffset,
-			 0))
+	miny =  100000
+	maxy = -100000
+	avgy = 0
+
+	i = 0
+	points2d = []
+	while i < len(points):
+		x = points[i+0]
+		y = points[i+1]
+		if y < miny:
+			miny = y
+		if y > maxy:
+			maxy = y
+		avgy += y
+		points2d.append((x,y))
 		i += 2
 
-	polygon = Polygon(points3d)
-	return trimesh.creation.extrude_polygon(polygon, height+zOffset)
+	avgy /= len(points)/2
+	return {
+		'miny': miny,
+		'maxy': maxy,
+		'avgy': avgy,
+		'points2d': points2d
+	}
 
-def load_and_extrude(file, height):
+def crap():
+	i = 0
+	while i < len(points):
+		x = points[i+0]
+		y = points[i+1]
+		#if y < (miny+10):
+		#	y -= 100
+		#if y > (maxy-10):
+		#	y += 100
+		i += 2
+	print('min-max y = {}, {}'.format(miny, maxy))
+	polygon = Polygon(points2d)
+	return {
+		'miny': miny,
+		'maxy': maxy,
+		'avgy': avgy,
+		'mesh': trimesh.creation.extrude_polygon(polygon, height+zOffset)
+	}
+
+def load_and_extract(file):
 	drawing = svg2rlg(inputFile)
 
 	assert len(drawing.getContents()) == 1
@@ -96,33 +129,46 @@ def load_and_extrude(file, height):
 
 	objects = []
 
-	zOffset = 5
-	height = 10
-
 	n = 0
 	for i in group_of_groups.getContents():
 		print("processing object")
 		path = find_right_path(i)
 		if path != None:
 			try:
-				#for x in range(0,10):
-					print("extrude")
-					obj = extrude_svg_path(path, height, 
-						zOffset=zOffset*n, xOffset=zOffset*n*0, yOffset=zOffset*n*1)
-					objects.append(obj)
-					n += 1
+				print("extrude")
+				obj = analyse_and_extract_path(path)
+				objects.append(obj)
+				n += 1
 
-			except:
-				print("unable to process polygon")
+			except Exception as e:
+				print("unable to process polygon: {}".format(e))
 		else:
 			print("path not found")
 
 	return objects
 
-objects = load_and_extrude(inputFile, 30)
+objects = load_and_extract(inputFile)
+
+objects.sort(key=lambda o : o['avgy'])
+
+objects = objects[0:6]
+
+
+zOffset = 5
+height = 10
+n = 0
+meshes = []
+for obj in objects:
+	polygon = Polygon(obj['points2d'])
+	tmp = trimesh.creation.extrude_polygon(polygon, height + zOffset*n) #, height+zOffset)
+	meshes.append(tmp)
+	n += 1
 
 #foo = (objects[0], objects[1], objects[2])
-foo = objects[0:6] # works okay
+#foo = objects[0:6] # works okay
+
+
+#foo = map(lambda f : f['mesh'], foo)
 
 #foo = objects[5:8] # shows only two..
 #foo = objects[6:8] # shows two..
@@ -133,7 +179,7 @@ foo = objects[0:6] # works okay
 
 #foo = objects[1:7] # horribly broken
 
-mesh = trimesh.boolean.union(foo, 'blender')
+mesh = trimesh.boolean.union(meshes, 'blender')
 #mesh.fix_normals()
 
 mesh.vertices -= mesh.center_mass
