@@ -61,6 +61,8 @@ def find_right_path(obj):
 def analyse_and_extract_path(path):
 	points = path.getProperties()['points']
 
+	minx =  100000
+	maxx = -100000
 	miny =  100000
 	maxy = -100000
 	avgy = 0
@@ -70,16 +72,20 @@ def analyse_and_extract_path(path):
 	while i < len(points):
 		x = points[i+0]
 		y = points[i+1]
-		if y < miny:
-			miny = y
-		if y > maxy:
-			maxy = y
+
+		minx = min(minx, x)
+		maxx = max(maxx, x)
+		miny = min(miny, y)
+		maxy = max(maxy, y)
+
 		avgy += y
 		points2d.append((x,y))
 		i += 2
 
 	avgy /= len(points)/2
 	return {
+		'minx': minx,
+		'maxx': maxx,
 		'miny': miny,
 		'maxy': maxy,
 		'avgy': avgy,
@@ -130,38 +136,12 @@ objects = load_and_extract(inputFile)
 
 objects.sort(key=lambda o : o['maxy'])
 
-objects = objects[0:5]
 
-
-zOffset = 5
+zOffset = .5
 height = 10
 yExtension = 20
-n = 0
-meshes = []
-for obj in objects:
-	print('object #{}: miny = {}, height = {}'.format(n, obj['miny'], obj['maxy']-obj['miny']))
-	points2d = obj['points2d']
-	adjusted_points = []
 
-	yThreshold = obj['maxy']-1
-	for point in points2d:
-		x = point[0]
-		y = point[1]
-		if y > yThreshold:
-			y += yExtension
-		adjusted_points.append([x, y])
-
-	polygon = Polygon(adjusted_points)
-	tmp = trimesh.creation.extrude_polygon(polygon, height + zOffset*n) #, height+zOffset)
-	meshes.append(tmp)
-	n += 1
-
-mesh = trimesh.boolean.union(meshes, 'blender')
-#mesh.fix_normals()
-
-mesh.vertices -= mesh.center_mass
-#mesh = mesh.scaled(0.05)
-
+# Scaling would be nice, but we cannot do it individually...
 s = 0.005
 scaling_matrix = (
 	(s, 0, 0, 0),
@@ -170,11 +150,54 @@ scaling_matrix = (
 	(0, 0, 0, 1)
 	);
 
-mesh.apply_transform(scaling_matrix)
-print("writing output.stl")
-mesh.export('output.stl')
+minx =  100000
+maxx = -100000
+miny =  100000
+maxy = -100000
 
+for i in range(0, len(objects)):
+
+	obj = objects[i]
+	print('object #{}: miny = {}, height = {}'.format(i, obj['miny'], obj['maxy']-obj['miny']))
+	points2d = obj['points2d']
+	adjusted_points = []
+
+	yThreshold = obj['maxy']-1
+	for point in points2d:
+		x = -point[0]
+		y = point[1]
+
+		minx = min(minx, x)
+		maxx = max(maxx, x)
+		miny = min(miny, y)
+		maxy = max(maxy, y)
+
+		if y > yThreshold:
+			y += yExtension
+		adjusted_points.append([x, y])
+
+	polygon = Polygon(adjusted_points)
+	try:
+		mesh = trimesh.creation.extrude_polygon(polygon, height + zOffset*i)
+	except:
+		print('error with polygon:')
+		print(adjusted_points)
+
+	#mesh.apply_transform(scaling_matrix)
+	print("writing output/{}.stl".format(i))
+	mesh.export('output/{}.stl'.format(i))
+
+base_box = Polygon(((minx,miny),(minx,maxy),(maxx, maxy), (maxx, miny)))
+base_box_mesh = trimesh.creation.extrude_polygon(base_box, height-zOffset)
+print("writing output/base_box.stl")
+base_box_mesh.export('output/base_box.stl')
 
 #mesh2.apply_scale(1.1)
 #scene.export('output.stl', file_type='jpg')
 #om.write_mesh('output.stl', mesh, binary=True)
+
+
+## POST PROCESSING
+# Scale, translate
+# select all, join (A, CTRL-J)
+# Edit mode -> mesh -> cleanup -> remove doubles
