@@ -136,6 +136,10 @@ objects = load_and_extract(inputFile)
 
 objects.sort(key=lambda o : o['maxy'])
 
+for o in objects:
+	print('{} ... {}'.format(o['minx'],o ['maxx']))
+xHalfway = sum(map(lambda o : o['minx'] + o ['maxx'], objects)) / (len(objects)*2)
+print('xHalfway = {}'.format(xHalfway))
 
 zOffset = .5
 height = 10
@@ -155,6 +159,9 @@ maxx = -100000
 miny =  100000
 maxy = -100000
 
+leftMaxX = -100000
+rightMinX = 100000
+
 for i in range(0, len(objects)):
 
 	obj = objects[i]
@@ -167,11 +174,6 @@ for i in range(0, len(objects)):
 		x = -point[0]
 		y = point[1]
 
-		minx = min(minx, x)
-		maxx = max(maxx, x)
-		miny = min(miny, y)
-		maxy = max(maxy, y)
-
 		if y > yThreshold:
 			y += yExtension
 		adjusted_points.append([x, y])
@@ -179,6 +181,18 @@ for i in range(0, len(objects)):
 	polygon = Polygon(adjusted_points)
 	try:
 		mesh = trimesh.creation.extrude_polygon(polygon, height + zOffset*i)
+		for point in points2d:
+			x = -point[0]
+			y = point[1]
+
+			minx = min(minx, x)
+			maxx = max(maxx, x)
+			miny = min(miny, y)
+			maxy = max(maxy, y)
+
+		leftMaxX = max(leftMaxX, obj['minx'])
+		rightMinX = min(rightMinX, obj['maxx'])
+
 	except:
 		print('error with polygon:')
 		print(adjusted_points)
@@ -186,6 +200,8 @@ for i in range(0, len(objects)):
 	#mesh.apply_transform(scaling_matrix)
 	print("writing output/{}.stl".format(i))
 	mesh.export('output/{}.stl'.format(i))
+
+print('minx, leftMaxX, xHalfway, rightMinX, maxx = {}, {}, {}, {}, {}'.format(minx, leftMaxX, xHalfway, rightMinX, maxx))
 
 base_box = Polygon(((minx,miny),(minx,maxy),(maxx, maxy), (maxx, miny)))
 base_box_mesh = trimesh.creation.extrude_polygon(base_box, height-zOffset)
