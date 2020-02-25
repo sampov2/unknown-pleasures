@@ -95,7 +95,7 @@ def analyse_and_extract_path(path):
 		maxy = max(maxy, y)
 
 		avgy += y
-		points2d.append((x,y))
+		points2d.append([x,y])
 		i += 2
 
 	avgy /= len(points)/2
@@ -182,6 +182,55 @@ maxy = -100000
 leftMaxX = -100000
 rightMinX = 100000
 
+def clean_bottom_and_extend(points2d, yExtension):
+	tmp = Polygon(points2d)
+	tmp.centroid
+	#print('centroid: {}'.format(tmp.centroid))
+
+	points_by_distance_to_centroid = []
+	for point in points2d:
+		if point[1] > tmp.centroid.y:
+			p = Point(point)
+			points_by_distance_to_centroid.append({
+				'point': point,
+				'idx': points2d.index(point),
+				'distance': tmp.centroid.distance(p)
+			})
+
+	points_by_distance_to_centroid.sort(key=lambda o : -o['distance'])
+	corners = [
+		next(o for o in points_by_distance_to_centroid if o['point'][0] < tmp.centroid.x),
+		next(o for o in points_by_distance_to_centroid if o['point'][0] > tmp.centroid.x)
+	]
+
+	#print('corners {}'.format(corners))
+	#print('points {}'.format(len(points2d)))
+	y = max(corners[0]['point'][1], corners[1]['point'][1])
+
+	# Figure out points between the corners
+	left_idx  = min(corners[0]['idx'], corners[1]['idx'])
+	right_idx = max(corners[0]['idx'], corners[1]['idx'])
+	all_idxs = set(range(0,len(points2d)))
+	within_idx = set(range(left_idx, right_idx+1))
+	outside_idx = all_idxs - within_idx # + set([left_idx, right_idx])
+
+	print('points {}, len(within) {}, len(outside)'.format(len(points2d), len(within_idx), len(outside_idx)))
+
+	# The switch y value for all points in the "shortest path"
+	if len(within_idx) < len(outside_idx):
+		for i in within_idx:
+			points2d[i][1] = y + yExtension
+	else:
+		for i in outside_idx:
+			points2d[i][1] = y + yExtension
+		points2d[left_idx][1] = y + yExtension
+		points2d[right_idx][1] = y + yExtension
+
+	#points2d[corners[0]['idx']][1] = y + yExtension
+	#points2d[corners[1]['idx']][1] = y + yExtension
+
+	return points2d
+
 for i in range(0, len(objects)):
 
 	obj = objects[i]
@@ -191,12 +240,10 @@ for i in range(0, len(objects)):
 
 	## This stretching bugs out
 	yThreshold = obj['maxy']-1
+	points2d = clean_bottom_and_extend(points2d, yExtension)
 	for point in points2d:
 		x = -point[0]
 		y = point[1]
-
-		if y > yThreshold:
-			y += yExtension
 		adjusted_points.append([x, y])
 
 	polygon = Polygon(adjusted_points)
