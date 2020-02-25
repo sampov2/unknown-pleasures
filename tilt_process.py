@@ -47,17 +47,19 @@ def show_object_tree(obj,n=0,depth=0):
 	return subCount
 
 
-def find_right_path(obj):
+def find_right_path(obj, n):
 	if isinstance(obj, shapes.Path):
 		if obj.getProperties()['fillColor'] != None:
 			return obj
 	elif isinstance(obj, shapes.Polygon):
-		print("skipping Polygon")
+		if obj.getProperties()['fillColor'] != None:
+			return obj
+		print("skipping Polygon #{}".format(n))
 	elif isinstance(obj, shapes.PolyLine):
-		print("skipping PolyLine")
+		print("skipping PolyLine #{}".format(n))
 	else:
 		for i in obj.getContents():
-			ret = find_right_path(i)
+			ret = find_right_path(i,n )
 			if ret != None:
 				return ret
 	return None
@@ -78,6 +80,15 @@ def analyse_and_extract_path(path):
 		x = points[i+0]
 		y = points[i+1]
 
+		## TODO: need a better method to detect the "lower
+		#        straight edges" of the polys
+		# If you look at y coordinates as a histogram, there
+		# should be a valley next to the edge coordinates.
+		# On the edge, there should be at least two points, 
+		# probably more. Next to this there should be a valley
+		# (though not necessarily)
+		#
+		# 
 		minx = min(minx, x)
 		maxx = max(maxx, x)
 		miny = min(miny, y)
@@ -124,7 +135,7 @@ def load_and_extract(file):
 	n = 0
 	for i in group_of_groups.getContents():
 		#print("processing object")
-		path = find_right_path(i)
+		path = find_right_path(i, n)
 		if path != None:
 			try:
 				obj = analyse_and_extract_path(path)
@@ -132,7 +143,7 @@ def load_and_extract(file):
 				n += 1
 
 			except Exception as e:
-				print("unable to process polygon: {}".format(e))
+				print("unable to process polygon #{}: {}".format(n,e))
 		else:
 			print("path not found")
 
@@ -151,7 +162,7 @@ height = 10
 yExtension = 20
 
 # Scaling would be nice, but we cannot do it individually...
-rot = 15 * math.pi/180
+rot = 8 * math.pi/180
 #rotation_atrix = euler2mat(rot, 0, 0)
 rotation_matrix = (
 	(1, 0,             0,              0),
@@ -178,6 +189,7 @@ for i in range(0, len(objects)):
 	points2d = obj['points2d']
 	adjusted_points = []
 
+	## This stretching bugs out
 	yThreshold = obj['maxy']-1
 	for point in points2d:
 		x = -point[0]
@@ -188,18 +200,10 @@ for i in range(0, len(objects)):
 		adjusted_points.append([x, y])
 
 	polygon = Polygon(adjusted_points)
-	translate_center = ((1, 0, 0, 0),
-						(0, 1, 0, -obj['maxy']),
-						(0, 0, 1, 0),
-						(0, 0, 0, 1))
-	translate_back =   ((1, 0, 0, 0),
-						(0, 1, 0, obj['maxy']),
-						(0, 0, 1, 0),
-						(0, 0, 0, 1))
 
 
 	try:
-		mesh = trimesh.creation.extrude_polygon(polygon, height)
+		mesh = trimesh.creation.extrude_polygon(polygon.simplify(.5, preserve_topology=True), height)
 		for point in points2d:
 			x = -point[0]
 			y = point[1]
@@ -215,10 +219,20 @@ for i in range(0, len(objects)):
 			else:
 				rightMinX = min(rightMinX, x)
 
-	except:
-		print('!!! error with polygon: {}'.format(i))
-		#print(adjusted_points)
+	except Exception as e:
+		print('!!! error with polygon #{}: {}'.format(i,e))
+		print(adjusted_points)
 		continue
+
+	translate_center = ((1, 0, 0, 0),
+						(0, 1, 0, -obj['maxy']),
+						(0, 0, 1, 0),
+						(0, 0, 0, 1))
+	translate_back =   ((1, 0, 0, 0),
+						(0, 1, 0, obj['maxy']),
+						(0, 0, 1, 0),
+						(0, 0, 0, 1))
+
 
 	mesh.apply_transform(translate_center)
 	mesh.apply_transform(rotation_matrix)
@@ -230,6 +244,11 @@ print('minx, leftMaxX, xHalfway, rightMinX, maxx = {}, {}, {}, {}, {}'.format(mi
 
 base_box = Polygon(((minx,miny),(minx,maxy),(maxx, maxy), (maxx, miny)))
 base_box_mesh = trimesh.creation.extrude_polygon(base_box, height)
+translate_down = ((1, 0, 0, 0),
+				  (0, 1, 0, 0),
+	 			  (0, 0, 1, height/2),
+				  (0, 0, 0, 1))
+base_box_mesh.apply_transform(translate_down)
 print("writing {}/base_box.stl".format(outputDir))
 base_box_mesh.export('{}/base_box.stl'.format(outputDir))
 
