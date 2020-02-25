@@ -47,6 +47,8 @@ def find_right_path(obj):
 		if obj.getProperties()['fillColor'] != None:
 			return obj
 	elif isinstance(obj, shapes.Polygon):
+		if obj.getProperties()['fillColor'] != None:
+			return obj
 		print("skipping Polygon")
 	elif isinstance(obj, shapes.PolyLine):
 		print("skipping PolyLine")
