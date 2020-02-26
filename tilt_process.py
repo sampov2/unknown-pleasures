@@ -68,25 +68,35 @@ def find_right_path(obj, n):
 	return None
 
 def create_intersect_face(minx, miny, maxx, maxy):
-	r = 0.7
-
+	rSide = 0.7
+	rMid = 0.6
 	width  = maxx - minx
-	height = maxy - miny
+	height = (maxy - miny) / 2
 
-	side = width * r / 2
-	mid = (width-side) / 2
+	side = width * rSide / 2
+	mid = width * rMid / 2
+	#mid = (width-side) * (1-r) / 2
 	h = height
+
+	xoffset = -(maxx-minx)/2 + maxx
+	yoffset = -5
+
 	ctr = np.array( [
-			(-(side+mid), -1*h), 
-			(-(side+mid), 0*h), 
-			(-(side+mid), 1*h),
-			(-(mid), 1*h),
-			(-(mid), 2*h),
-			( (mid), 2*h), 
-			( (mid), 1*h),
-			( (side+mid), 1*h), 
-			( (side+mid), 0*h),
-			( (side+mid), -1*h)])
+			(xoffset-(side+mid), yoffset-1*h), 
+			(xoffset-(side+mid), yoffset+0*h), 
+			(xoffset-(side+mid), yoffset+1*h),
+			(xoffset-(mid), yoffset+1*h),
+			(xoffset-(mid), yoffset+5.5*h),
+			(xoffset+(mid), yoffset+5.5*h), 
+			(xoffset+(mid), yoffset+1*h),
+			(xoffset+(side+mid), yoffset+1*h), 
+			(xoffset+(side+mid), yoffset+0*h),
+			(xoffset+(side+mid), yoffset-1*h)])
+
+
+	print('minx: {}, maxx: {}'.format(minx, maxx))
+	print('ctr[0][0]: {}'.format(ctr[0][0]))
+	print('ctr[9][0]: {}'.format(ctr[9][0]))
 
 	x=ctr[:,0]
 	y=ctr[:,1]
@@ -202,8 +212,6 @@ objects = load_and_extract(inputFile)
 
 objects.sort(key=lambda o : o['maxy'])
 
-for o in objects:
-	print('{} ... {}'.format(o['minx'],o ['maxx']))
 xHalfway = sum(map(lambda o : o['minx'] + o ['maxx'], objects)) / (len(objects)*2)
 print('xHalfway = {}'.format(xHalfway))
 
@@ -213,12 +221,17 @@ yExtension = 20
 # Scaling would be nice, but we cannot do it individually...
 rot = 8 * math.pi/180
 #rotation_atrix = euler2mat(rot, 0, 0)
-rotation_matrix = (
-	(1, 0,             0,              0),
-	(0, math.cos(rot), -math.sin(rot), 0),
-	(0, math.sin(rot), math.cos(rot),  0),
-	(0, 0,             0,              1)
-	);
+def rotation_matrix_3d(deg):
+	rot = deg * math.pi / 180
+	return (
+		(1, 0,             0,              0),
+		(0, math.cos(rot), -math.sin(rot), 0),
+		(0, math.sin(rot), math.cos(rot),  0),
+		(0, 0,             0,              1)
+		);
+
+rotation_matrix = rotation_matrix_3d(8)
+
 
 #zz = euler2mat(rot, 0, 0)
 #print(zz)
@@ -352,9 +365,13 @@ intersect_face = create_intersect_face(minx, 0, maxx, height)
 intersect_poly = Polygon(intersect_face)
 intersect_mesh = trimesh.creation.extrude_polygon(intersect_poly, maxy - miny)
 
+intersect_mesh.apply_transform(rotation_matrix_3d(-90))
+
 
 print("writing {}/intersect.stl".format(outputDir))
 intersect_mesh.export('{}/intersect.stl'.format(outputDir))
+
+
 #mesh2.apply_scale(1.1)
 #scene.export('output.stl', file_type='jpg')
 #om.write_mesh('output.stl', mesh, binary=True)
