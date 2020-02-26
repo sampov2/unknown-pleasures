@@ -68,8 +68,8 @@ def find_right_path(obj, n):
 	return None
 
 def create_intersect_face(minx, miny, maxx, maxy):
-	rSide = 0.7
-	rMid = 0.6
+	rSide = 0.5
+	rMid = 0.7
 	width  = maxx - minx
 	height = (maxy - miny) / 2
 
@@ -82,16 +82,16 @@ def create_intersect_face(minx, miny, maxx, maxy):
 	yoffset = -5
 
 	ctr = np.array( [
-			(xoffset-(side+mid), yoffset-1*h), 
-			(xoffset-(side+mid), yoffset+0*h), 
+			(xoffset-(side+mid), yoffset-4*h), 
+			(xoffset-(side+mid), yoffset-3*h), 
 			(xoffset-(side+mid), yoffset+1*h),
 			(xoffset-(mid), yoffset+1*h),
 			(xoffset-(mid), yoffset+5.5*h),
 			(xoffset+(mid), yoffset+5.5*h), 
 			(xoffset+(mid), yoffset+1*h),
 			(xoffset+(side+mid), yoffset+1*h), 
-			(xoffset+(side+mid), yoffset+0*h),
-			(xoffset+(side+mid), yoffset-1*h)])
+			(xoffset+(side+mid), yoffset-3*h),
+			(xoffset+(side+mid), yoffset-4*h)])
 
 
 	print('minx: {}, maxx: {}'.format(minx, maxx))
@@ -352,19 +352,24 @@ print('minx, leftMaxX, xHalfway, rightMinX, maxx = {}, {}, {}, {}, {}'.format(mi
 
 base_box = Polygon(((minx,miny),(minx,maxy),(maxx, maxy), (maxx, miny)))
 base_box_mesh = trimesh.creation.extrude_polygon(base_box, height)
-translate_down = ((1, 0, 0, 0),
-				  (0, 1, 0, 0),
-	 			  (0, 0, 1, height/3),
-				  (0, 0, 0, 1))
-base_box_mesh.apply_transform(translate_down)
+def translate_down_3d(n):
+	return ((1, 0, 0, 0),
+		  	(0, 1, 0, 0),
+			(0, 0, 1, n),
+		  	(0, 0, 0, 1))
+
+base_box_mesh.apply_transform(translate_down_3d(height/3))
 print("writing {}/base_box.stl".format(outputDir))
 base_box_mesh.export('{}/base_box.stl'.format(outputDir))
 
-
+print('height {}'.format(height))
+print('miny {}'.format(miny))
+print('maxy {}'.format(maxy))
 intersect_face = create_intersect_face(minx, 0, maxx, height)
 intersect_poly = Polygon(intersect_face)
-intersect_mesh = trimesh.creation.extrude_polygon(intersect_poly, maxy - miny)
+intersect_mesh = trimesh.creation.extrude_polygon(intersect_poly, (maxy - miny)+height)
 
+intersect_mesh.apply_transform(translate_down_3d(miny-height))
 intersect_mesh.apply_transform(rotation_matrix_3d(-90))
 
 
