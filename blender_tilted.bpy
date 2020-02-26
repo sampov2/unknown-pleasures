@@ -1,0 +1,30 @@
+
+import os
+import re
+
+# Delect objects by type
+for o in bpy.context.scene.objects:
+    if o.type == 'MESH':
+        o.select = True
+    else:
+        o.select = False
+
+# Call the operator only once
+bpy.ops.object.delete()
+
+
+directory = "/home/v2/data/Unknown_Pleasures/tilted/"
+files = [{'name': entry } for entry in os.listdir(directory) if re.match("[0-9]+.stl",entry)]
+#files = files.filter()
+print(files)
+
+#z = map(lambda e : {'name': e}, files)
+#print(z)
+
+scale = 0.01
+bpy.ops.import_mesh.stl(
+	directory=directory,
+	files=files,
+	filter_glob="[0-9]*.stl", global_scale=scale)
+
+
