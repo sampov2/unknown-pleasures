@@ -8,6 +8,9 @@ from svglib.svglib import svg2rlg
 from reportlab.graphics import shapes;
 from transforms3d.euler import euler2mat;
 
+import numpy as np
+from scipy import interpolate
+
 #inputFile = 'original/single-wave.svg'
 #inputFile = 'original/two-waves.svg'
 inputFile = 'original/drawing-3.svg'
@@ -63,6 +66,52 @@ def find_right_path(obj, n):
 			if ret != None:
 				return ret
 	return None
+
+def create_intersect_face(minx, miny, maxx, maxy):
+	r = 0.7
+
+	width  = maxx - minx
+	height = maxy - miny
+
+	side = width * r / 2
+	mid = (width-side) / 2
+	h = height
+	ctr = np.array( [
+			(-(side+mid), -1*h), 
+			(-(side+mid), 0*h), 
+			(-(side+mid), 1*h),
+			(-(mid), 1*h),
+			(-(mid), 2*h),
+			( (mid), 2*h), 
+			( (mid), 1*h),
+			( (side+mid), 1*h), 
+			( (side+mid), 0*h),
+			( (side+mid), -1*h)])
+
+	x=ctr[:,0]
+	y=ctr[:,1]
+
+	print(x)
+	print(y)
+
+	l=len(x)  
+
+	t=np.linspace(0,1,l-2,endpoint=True)
+	t=np.append([0,0,0],t)
+	t=np.append(t,[1,1,1])
+
+	tck=[t,[x,y],3]
+	u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
+	out = interpolate.splev(u3,tck)
+
+	firstx = ctr[0][0]
+	firsty = ctr[0][1]
+
+	out[0] = np.append(out[0], firstx)
+	out[1] = np.append(out[1], firsty)
+
+	return [ (out[0][i], out[1][i]) for i in range(len(out[0]))]
+	
 
 
 def analyse_and_extract_path(path):
@@ -248,7 +297,6 @@ for i in range(0, len(objects)):
 
 	polygon = Polygon(adjusted_points)
 
-
 	try:
 		mesh = trimesh.creation.extrude_polygon(polygon.simplify(.5, preserve_topology=True), height)
 		for point in points2d:
@@ -293,12 +341,20 @@ base_box = Polygon(((minx,miny),(minx,maxy),(maxx, maxy), (maxx, miny)))
 base_box_mesh = trimesh.creation.extrude_polygon(base_box, height)
 translate_down = ((1, 0, 0, 0),
 				  (0, 1, 0, 0),
-	 			  (0, 0, 1, height/2),
+	 			  (0, 0, 1, height/3),
 				  (0, 0, 0, 1))
 base_box_mesh.apply_transform(translate_down)
 print("writing {}/base_box.stl".format(outputDir))
 base_box_mesh.export('{}/base_box.stl'.format(outputDir))
 
+
+intersect_face = create_intersect_face(minx, 0, maxx, height)
+intersect_poly = Polygon(intersect_face)
+intersect_mesh = trimesh.creation.extrude_polygon(intersect_poly, maxy - miny)
+
+
+print("writing {}/intersect.stl".format(outputDir))
+intersect_mesh.export('{}/intersect.stl'.format(outputDir))
 #mesh2.apply_scale(1.1)
 #scene.export('output.stl', file_type='jpg')
 #om.write_mesh('output.stl', mesh, binary=True)
