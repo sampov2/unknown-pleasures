@@ -219,8 +219,6 @@ height = 10
 yExtension = 20
 
 # Scaling would be nice, but we cannot do it individually...
-rot = 8 * math.pi/180
-#rotation_atrix = euler2mat(rot, 0, 0)
 def rotation_matrix_3d(deg):
 	rot = deg * math.pi / 180
 	return (
@@ -321,12 +319,6 @@ for i in range(0, len(objects)):
 			miny = min(miny, y)
 			maxy = max(maxy, y)
 
-			if x < xHalfway:
-				# left
-				leftMaxX = max(leftMaxX, x)
-			else:
-				rightMinX = min(rightMinX, x)
-
 	except Exception as e:
 		print('!!! error with polygon #{}: {}'.format(i,e))
 		print(adjusted_points)
@@ -348,19 +340,23 @@ for i in range(0, len(objects)):
 	print("writing {}/{}.stl".format(outputDir, i))
 	mesh.export('{}/{}.stl'.format(outputDir, i))
 
-print('minx, leftMaxX, xHalfway, rightMinX, maxx = {}, {}, {}, {}, {}'.format(minx, leftMaxX, xHalfway, rightMinX, maxx))
-
-base_box = Polygon(((minx,miny),(minx,maxy),(maxx, maxy), (maxx, miny)))
-base_box_mesh = trimesh.creation.extrude_polygon(base_box, height)
 def translate_down_3d(n):
 	return ((1, 0, 0, 0),
 		  	(0, 1, 0, 0),
 			(0, 0, 1, n),
 		  	(0, 0, 0, 1))
 
-base_box_mesh.apply_transform(translate_down_3d(height/3))
-print("writing {}/base_box.stl".format(outputDir))
-base_box_mesh.export('{}/base_box.stl'.format(outputDir))
+def write_box(minx, miny, maxx, maxy, height, yOffset, filename):
+	box = Polygon(((minx,miny),(minx,maxy),(maxx, maxy), (maxx, miny)))
+	mesh = trimesh.creation.extrude_polygon(box, height)
+	mesh.apply_transform(translate_down_3d(yOffset))
+	print("writing {}/{}.stl".format(outputDir, filename))
+	mesh.export('{}/{}.stl'.format(outputDir, filename))
+
+write_box(minx,miny,maxx,maxy, height, height/3, 'base_box')
+
+write_box(minx+5,miny,maxx-5,maxy, height*5, -height*2, 'intersect2');
+
 
 print('height {}'.format(height))
 print('miny {}'.format(miny))
