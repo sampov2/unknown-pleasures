@@ -1,6 +1,9 @@
 
 import os
 import re
+import bpy
+import math
+from mathutils import Vector
 
 # Delect objects by type
 for o in bpy.context.scene.objects:
@@ -16,6 +19,7 @@ bpy.ops.object.delete()
 directory = "/home/v2/data/Unknown_Pleasures/tilted/"
 files = [{'name': entry } for entry in os.listdir(directory) if re.match("[0-9]+.stl",entry)]
 #files = files.filter()
+files.append({'name': 'base_box.stl'})
 print(files)
 
 #z = map(lambda e : {'name': e}, files)
@@ -27,4 +31,13 @@ bpy.ops.import_mesh.stl(
 	files=files,
 	filter_glob="[0-9]*.stl", global_scale=scale)
 
+bpy.ops.object.join()
 
+
+context = bpy.context
+scene = context.scene
+ob = scene.objects.active # the newly added cylinder.
+# set the objects rotation
+ob.rotation_euler = (0, math.radians(180), 0)
+
+ob.location += Vector((-4, -2, .1))
