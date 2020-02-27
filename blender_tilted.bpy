@@ -33,11 +33,31 @@ bpy.ops.import_mesh.stl(
 
 bpy.ops.object.join()
 
+bpy.ops.import_mesh.stl(
+	directory=directory,
+	files=[{'name': 'intersect2.stl'}],
+	filter_glob="[0-9]*.stl", global_scale=scale)
 
-context = bpy.context
-scene = context.scene
-ob = scene.objects.active # the newly added cylinder.
-# set the objects rotation
+# select all
+print('#########################################')
+print(bpy.data.objects)
+for obj in bpy.context.scene.objects:
+	print('yeyeye {} {}'.format(obj.type, obj))
+	obj.select = obj.type == "MESH"
+	print(' - {}'.format(obj.select))
+	#obj.select = obj.type == "EMPTY"
+	#obj.select_set(True)
+
+#print(bpy.context.scene.objects.active)
+#ob = bpy.context.scene.objects.active
+ob = bpy.ops.object
+#context = bpy.context
+#scene = context.scene
+#ob = scene.objects.active # the newly added cylinder.
+## set the objects rotation
 ob.rotation_euler = (0, math.radians(180), 0)
 
-ob.location += Vector((-4, -2, .1))
+#ob.location += Vector((-4, -2, .1))
+
+
+## TODO: tilt by
