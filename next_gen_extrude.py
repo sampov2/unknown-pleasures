@@ -25,7 +25,7 @@ km = km.fit(d_verts)
 pred = km.predict(d_verts)
 
 print('transforming faces')
-transform_amount = 30
+transform_amount = 50
 
 samples = [0, 0]
 
