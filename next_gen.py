@@ -6,15 +6,19 @@
 
 import pymesh;
 
+print("loading meshes")
+intersect = pymesh.load_mesh("/models/tilted/intersect2.stl")
+
 meshes = []
 for n in range(1,79): ## TODO: 79
 	tmp = pymesh.load_mesh("/models/tilted/{}.stl".format(n))
 	meshes.append(tmp)
 
+print("combining swirls")
+united_swirls = pymesh.CSGTree({"union": list(map(lambda x : { "mesh": x}, meshes))}).mesh
 
-p = list(map(lambda x : { "mesh": x}, meshes))
+print("calculating intersect to clean up swirls")
+result = pymesh.boolean(united_swirls, intersect, operation="intersection", engine="igl")
 
-x = pymesh.CSGTree({"union": p})
-
-
-pymesh.save_mesh("/models/next_gen_output.stl", x.mesh)
+print("writing output")
+pymesh.save_mesh("/models/next_gen_output.stl", result)
