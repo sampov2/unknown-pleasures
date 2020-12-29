@@ -215,7 +215,7 @@ objects.sort(key=lambda o : o['maxy'])
 xHalfway = sum(map(lambda o : o['minx'] + o ['maxx'], objects)) / (len(objects)*2)
 print('xHalfway = {}'.format(xHalfway))
 
-height = 10
+height = 20
 yExtension = 20
 
 # Scaling would be nice, but we cannot do it individually...
@@ -228,7 +228,7 @@ def rotation_matrix_3d(deg):
 		(0, 0,             0,              1)
 		);
 
-rotation_matrix = rotation_matrix_3d(8)
+rotation_matrix = rotation_matrix_3d(-10)
 
 
 #zz = euler2mat(rot, 0, 0)
