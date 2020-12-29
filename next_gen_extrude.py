@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 
-## docker run -it --rm -v `pwd`:/models pymesh-sklearn python /models/next_gen_extrude.py 
+## docker run -it --rm -v $PWD:/models pymesh-unknown-pleasures python /models/next_gen_extrude.py 
 
 ## https://pymesh.readthedocs.io/en/latest/mesh_boolean.html#boolean-interface
 

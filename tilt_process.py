@@ -13,9 +13,9 @@ from scipy import interpolate
 
 #inputFile = 'original/single-wave.svg'
 #inputFile = 'original/two-waves.svg'
-inputFile = 'original/drawing-3.svg'
+inputFile = '/models/original/drawing-3.svg'
 
-outputDir = 'tilted';
+outputDir = '/models/tilted/';
 
 ## Try out both rotate and tilt!
 
@@ -182,7 +182,7 @@ def load_and_extract(file):
 		print('deeper')
 		group_of_groups = group_of_groups.getContents()[0]
 
-	print len(group_of_groups.getContents())
+	print(len(group_of_groups.getContents()))
 	#group1 = main_group.getContents()[0]
 
 	#print('group 1 length {}'.format(len(group1.getContents())))

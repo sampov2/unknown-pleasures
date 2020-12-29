@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 
-## docker run -it --rm -v `pwd`:/models pymesh/pymesh python /models/next_gen.py 
+## docker run -it --rm -v $PWD:/models pymesh-unknown-pleasures python /models/next_gen.py 
 
 ## https://pymesh.readthedocs.io/en/latest/mesh_boolean.html#boolean-interface
 
@@ -14,10 +14,10 @@ for n in range(1,79): ## TODO: 79
 	tmp = pymesh.load_mesh("/models/tilted/{}.stl".format(n))
 	meshes.append(tmp)
 
-print("combining swirls")
+print("combining squigglies")
 united_swirls = pymesh.CSGTree({"union": list(map(lambda x : { "mesh": x}, meshes))}).mesh
 
-print("calculating intersect to clean up swirls")
+print("calculating intersect to clean up squigglies")
 result = pymesh.boolean(united_swirls, intersect, operation="intersection", engine="igl")
 
 print("writing output")
