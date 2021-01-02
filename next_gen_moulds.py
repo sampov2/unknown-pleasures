@@ -4,7 +4,8 @@
 
 ## https://pymesh.readthedocs.io/en/latest/mesh_boolean.html#boolean-interface
 
-import pymesh;
+import pymesh
+import math
 import numpy as np
 
 
@@ -26,13 +27,13 @@ def generate_info(mesh):
 axis_info = generate_info(mesh)
 print(axis_info)
 
-outer_mould_thickness = 20
-inner_mould_thickness = 20
+outer_mould_thickness = 10
+inner_mould_thickness = 10
 
-mould_top = axis_info['min'][depth_axis] + (axis_info['max'][depth_axis] - axis_info['min'][depth_axis]) * .7
+def gen_box(axis_info, thickness, mould_top_rel, draft_angle=0.0):
+	mould_top = axis_info['min'][depth_axis] + (axis_info['max'][depth_axis] - axis_info['min'][depth_axis]) * mould_top_rel
 
-def gen_box(axis_info, thickness, mould_top):
-	return pymesh.generate_box_mesh([
+	box = pymesh.generate_box_mesh([
 		axis_info['min'][0] - thickness,
 		axis_info['min'][1] - thickness,
 		axis_info['min'][2] - thickness,
@@ -42,9 +43,45 @@ def gen_box(axis_info, thickness, mould_top):
 		mould_top,
 	])
 
-## TODO!! Remember draft angles!!
-inner_mould = gen_box(axis_info, inner_mould_thickness, mould_top)
-outer_mould = gen_box(axis_info, inner_mould_thickness + outer_mould_thickness, mould_top)
+	alpha = draft_angle
+	box_height = abs(mould_top -  (axis_info['min'][2] - thickness))
+	if abs(alpha) > 0:
+		beta = 180 - 90 - alpha
+		#a = box_height
+		# tan(beta) = a / c
+		# c * tan(beta) = a
+		# c = a / tan(beta)
+		# draft_offset = c = a / tan(beta)
+
+		draft_offset = box_height / math.tan(beta * math.pi / 180)
+
+		print('box_height = {}, draft_angle = {} (deg) => draft_offset = {}'.format(box_height, draft_angle, draft_offset))
+
+		x_mid = (axis_info['min'][0] + axis_info['max'][0])/2
+		y_mid = (axis_info['min'][1] + axis_info['max'][1])/2
+
+
+		modified_vertices = np.copy(box.vertices)
+		for i in range(len(modified_vertices)):
+			v = modified_vertices[i]
+			if abs(v[2] - axis_info['min'][2] - thickness) < abs(v[2] - mould_top):
+				x_direction = 1
+				y_direction = 1
+				if v[0] > x_mid:
+					x_direction = -1
+				if v[1] > y_mid:
+					y_direction = -1
+
+				v[0] = v[0] + draft_offset * x_direction
+				v[1] = v[1] + draft_offset * y_direction
+
+		box = pymesh.form_mesh(modified_vertices, box.faces)
+
+
+	return box
+
+inner_mould = gen_box(axis_info, inner_mould_thickness, .7, draft_angle=3)
+outer_mould = gen_box(axis_info, inner_mould_thickness + outer_mould_thickness, .7)
 
 outer_mould = pymesh.boolean(outer_mould, inner_mould, operation="difference")
 inner_mould = pymesh.boolean(inner_mould, mesh, operation="difference")
