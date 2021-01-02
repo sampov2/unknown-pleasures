@@ -22,6 +22,7 @@ print('analyzing {} vertices'.format(len(d_verts)))
 km = KMeans(n_clusters=2, random_state=1)
 km = km.fit(d_verts)
 
+## TODO: this does not work perfectly just yet...
 pred = km.predict(d_verts)
 
 print('transforming faces')
@@ -55,6 +56,22 @@ for i in range(len(pred)):
 
 
 updated_mesh = pymesh.form_mesh(verts, mesh.faces)
+
+#print("cleaning up mesh")
+#[updated_mesh, info] = pymesh.remove_isolated_vertices(updated_mesh)
+#print("- remove_isolated_vertices: {}".format(info))
+#
+#[updated_mesh, info] = pymesh.remove_duplicated_vertices(updated_mesh,tol=1e-2)
+#print("- remove_duplicated_vertices: {}".format(info))
+#
+#[updated_mesh, info] = pymesh.collapse_short_edges(updated_mesh)
+#print("- collapse_short_edges: {}".format(info))
+#
+#[updated_mesh, info] = pymesh.remove_duplicated_faces(updated_mesh)
+#print("- remove_duplicated_faces: {}".format(info))
+
+
+
 
 print("writing output")
 pymesh.save_mesh("/models/next_gen_output_extruded.stl", updated_mesh)
