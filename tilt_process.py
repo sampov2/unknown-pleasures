@@ -139,6 +139,9 @@ def analyse_and_extract_path(path):
 		x = points[i+0]
 		y = points[i+1]
 
+		# flip x
+		x = -x
+
 		## TODO: need a better method to detect the "lower
 		#        straight edges" of the polys
 		# If you look at y coordinates as a histogram, there
@@ -169,7 +172,7 @@ def analyse_and_extract_path(path):
 	}
 
 def load_and_extract(file):
-	drawing = svg2rlg(inputFile)
+	drawing = svg2rlg(file)
 
 	assert len(drawing.getContents()) == 1
 
