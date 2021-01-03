@@ -14,7 +14,8 @@ box_height_axis = 1
 depth_axis = 2
 
 print("loading meshes")
-mesh = pymesh.load_mesh("/models/next_gen_output_extruded.stl")
+mesh = pymesh.load_mesh("/models/next_gen_output.stl")
+#mesh = pymesh.load_mesh("/models/next_gen_output_extruded.stl")
 
 print("calculating moulds")
 def generate_info(mesh):

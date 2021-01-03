@@ -1,5 +1,8 @@
 #!/usr/bin/python2
 
+## docker run -it --rm -v $PWD:/models pymesh-unknown-pleasures python /models/tilt_process.py
+
+
 import trimesh 
 import math
 from shapely.geometry import Polygon, Point
@@ -182,10 +185,9 @@ def load_and_extract(file):
 
 	group_of_groups = main_group
 	while len(group_of_groups.getContents()) == 1:
-		print('deeper')
 		group_of_groups = group_of_groups.getContents()[0]
 
-	print(len(group_of_groups.getContents()))
+	#print(len(group_of_groups.getContents()))
 	#group1 = main_group.getContents()[0]
 
 	#print('group 1 length {}'.format(len(group1.getContents())))
@@ -216,7 +218,14 @@ objects = load_and_extract(inputFile)
 objects.sort(key=lambda o : o['maxy'])
 
 xHalfway = sum(map(lambda o : o['minx'] + o ['maxx'], objects)) / (len(objects)*2)
+minMinY = min(map(lambda o : o['miny'], objects))
+maxMinY = max(map(lambda o : o['miny'], objects))
+
 print('xHalfway = {}'.format(xHalfway))
+print('xmin range = {} .. {}'.format(minMinY, maxMinY))
+
+yStep = (maxMinY - minMinY) / len(objects)
+yPos = minMinY
 
 height = 80
 yExtension = 20
@@ -277,7 +286,7 @@ def clean_bottom_and_extend(points2d, yExtension):
 	within_idx = set(range(left_idx, right_idx+1))
 	outside_idx = all_idxs - within_idx # + set([left_idx, right_idx])
 
-	print('points {}, len(within) {}, len(outside)'.format(len(points2d), len(within_idx), len(outside_idx)))
+	#print('points {}, len(within) {}, len(outside)'.format(len(points2d), len(within_idx), len(outside_idx)))
 
 	# The switch y value for all points in the "shortest path"
 	if len(within_idx) < len(outside_idx):
@@ -297,7 +306,8 @@ def clean_bottom_and_extend(points2d, yExtension):
 for i in range(0, len(objects)):
 
 	obj = objects[i]
-	print('object #{}: miny = {}, height = {}'.format(i, obj['miny'], obj['maxy']-obj['miny']))
+	#print('object #{}: miny = {}, height = {}'.format(i, obj['miny'], obj['maxy']-obj['miny']))
+	#print('#{}, maxy = {}'.format(i, obj['maxy']))
 	points2d = obj['points2d']
 	adjusted_points = []
 
@@ -308,7 +318,6 @@ for i in range(0, len(objects)):
 		x = -point[0]
 		y = point[1]
 		adjusted_points.append([x, y])
-
 	polygon = Polygon(adjusted_points)
 
 	try:
@@ -327,20 +336,23 @@ for i in range(0, len(objects)):
 		print(adjusted_points)
 		continue
 
+	print('#{}, obj["maxy"] = {}, maxy = {}'.format(i, round(obj['maxy'],2), round(maxy, 2)))
+
 	translate_center = ((1, 0, 0, 0),
-						(0, 1, 0, -obj['maxy']),
+						(0, 1, 0, -yPos),
 						(0, 0, 1, 0),
 						(0, 0, 0, 1))
 	translate_back =   ((1, 0, 0, 0),
-						(0, 1, 0, obj['maxy']),
+						(0, 1, 0, yPos),
 						(0, 0, 1, 0),
 						(0, 0, 0, 1))
 
+	yPos = yPos + yStep
 
 	mesh.apply_transform(translate_center)
 	mesh.apply_transform(rotation_matrix)
 	mesh.apply_transform(translate_back)
-	print("writing {}/{}.stl".format(outputDir, i))
+	#print("writing {}/{}.stl".format(outputDir, i))
 	mesh.export('{}/{}.stl'.format(outputDir, i))
 
 def translate_down_3d(n):

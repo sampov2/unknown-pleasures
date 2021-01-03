@@ -19,7 +19,7 @@ d_verts = np.array([ x[transform_axis] for x in mesh.vertices ]).reshape(-1,1)
 
 print('analyzing {} vertices'.format(len(d_verts)))
 
-km = KMeans(n_clusters=2, random_state=1)
+km = KMeans(n_clusters=2, random_state=3)
 km = km.fit(d_verts)
 
 ## TODO: this does not work perfectly just yet...
@@ -30,6 +30,7 @@ transform_amount = 50
 
 samples = [0, 0]
 
+maximum = np.maximum.reduce(d_verts)
 
 for i in range(len(pred)):
 	x = pred[i]
@@ -38,12 +39,16 @@ for i in range(len(pred)):
 	elif x == 1:
 		samples[1] = d_verts[i]
 	else:
-		raise Exception('Prediction was not 0 or 1 but {}'.format(x))
+		raise Exception('Prediction {} illegal (should be 0 or 1)'.format(x))
 
 if samples[1] > samples[0]:
 	transform_direction = 1
+	transform_label = 1
+	base_z = np.maximum.reduce(d_verts)[0]  + transform_amount * transform_direction
 else:
 	transform_direction = -1
+	transform_label = 0
+	base_z = np.minimum.reduce(d_verts)[0]  + transform_amount * transform_direction
 
 #transform_direction = (samples[1] > samples[0]) ? 1 : -1
 verts = np.copy(mesh.vertices)
@@ -51,9 +56,9 @@ verts = np.copy(mesh.vertices)
 
 for i in range(len(pred)):
 	x = pred[i]
-	if x == 1:
-		verts[i, transform_axis] = verts[i, transform_axis] + transform_amount * transform_direction
-
+	if x == transform_label:
+		# Force the other verts to the same z-level
+		verts[i, transform_axis] = base_z
 
 updated_mesh = pymesh.form_mesh(verts, mesh.faces)
 
