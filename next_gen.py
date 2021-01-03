@@ -21,4 +21,4 @@ print("calculating intersect to clean up squigglies")
 result = pymesh.boolean(united_swirls, intersect, operation="intersection", engine="igl")
 
 print("writing output")
-pymesh.save_mesh("/models/next_gen_output.stl", result)
+pymesh.save_mesh("/models/unknown_pleasures_positive.stl", result)

@@ -240,7 +240,7 @@ def rotation_matrix_3d(deg):
 		(0, 0,             0,              1)
 		);
 
-rotation_matrix = rotation_matrix_3d(10)
+rotation_matrix = rotation_matrix_3d(15)
 
 
 #zz = euler2mat(rot, 0, 0)

@@ -11,6 +11,8 @@ Build docker container that has pymesh and sklearn (used for K-means in step 3)
 
 `docker build -t pymesh-unknown-pleasures .`
 
+NOTE! The docker container is based on `pymesh/pymesh` and image id `967a56ffb4e7` was used when developing these scripts
+
 # Run
 
 `docker run -it --rm -v $PWD:/models pymesh-unknown-pleasures`

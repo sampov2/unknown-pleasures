@@ -14,8 +14,7 @@ box_height_axis = 1
 depth_axis = 2
 
 print("loading meshes")
-mesh = pymesh.load_mesh("/models/next_gen_output.stl")
-#mesh = pymesh.load_mesh("/models/next_gen_output_extruded.stl")
+mesh = pymesh.load_mesh("/models/unknown_pleasures_positive.stl")
 
 print("calculating moulds")
 def generate_info(mesh):
@@ -88,5 +87,5 @@ outer_mould = pymesh.boolean(outer_mould, inner_mould, operation="difference")
 inner_mould = pymesh.boolean(inner_mould, mesh, operation="difference")
 
 print("writing output")
-pymesh.save_mesh("/models/next_gen_output_outer_mould.stl", outer_mould)
-pymesh.save_mesh("/models/next_gen_output_inner_mould.stl", inner_mould)
+pymesh.save_mesh("/models/unknown_pleasures_outer_mould.stl", outer_mould)
+pymesh.save_mesh("/models/unknown_pleasures_inner_mould.stl", inner_mould)
