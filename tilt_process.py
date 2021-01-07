@@ -227,7 +227,7 @@ print('xmin range = {} .. {}'.format(minMinY, maxMinY))
 yStep = (maxMinY - minMinY) / len(objects)
 yPos = minMinY
 
-height = 80
+height = 120
 yExtension = 20
 
 # Scaling would be nice, but we cannot do it individually...
@@ -299,12 +299,13 @@ basez = np.array([])
 inputXrange = None
 inputLastYMin = None
 
+bottomSquiggleYHeight = None
+
 globalMaxes = None
 globalMinis = None
 
-# Loop through objects + one filler
+# Loop through objects + one filler, note that the filler is put on the top, but squiggle order is actually top (0) to bottom (79)
 for i in range(0, len(objects) + 1):
-
 
 	adjusted_points = []
 	if i < len(objects):
@@ -313,7 +314,12 @@ for i in range(0, len(objects) + 1):
 
 		points2d = obj['points2d']
 
-		points2d = clean_bottom_and_extend(points2d, yExtension)
+		if i == 79:
+			# This controls the length of the bottom most extension slope ("blank area in the bottom")
+			points2d = clean_bottom_and_extend(points2d, yExtension * 1.5)
+		else:
+			points2d = clean_bottom_and_extend(points2d, yExtension)
+
 		inputLastYMin = None
 		for point in points2d:
 			x = -point[0]
@@ -331,7 +337,8 @@ for i in range(0, len(objects) + 1):
 		c1x = inputXrange[0]
 		c1y = inputLastYMin - yStep * (len(objects) - 5)
 		c2x = inputXrange[1]
-		c2y = c1y - yStep * 7
+		## This controls the length of the top slope ("blank area in the top")
+		c2y = c1y - yStep * 8.5
 		#c2y = inputLastYMin - yStep * (len(objects) + 1)
 
 		adjusted_points.append([c1x,c1y])
@@ -385,6 +392,9 @@ for i in range(0, len(objects) + 1):
 			basez = np.append(basez, point[2])
 			break
 
+	if i == 79:
+		bottomSquiggleYHeight = localMaxes[1] - localMinis[1]
+
 	#print("writing {}/{}.stl".format(outputDir, i))
 	mesh.export('{}/{}.stl'.format(outputDir, i))
 
@@ -411,34 +421,24 @@ maxx = globalMaxes[0]
 miny = globalMinis[1]
 maxy = globalMaxes[1]
 print('base box height {}'.format(height))
-write_box(minx,miny,maxx,maxy, globalMaxes[2] - globalMinis[2], np.median(basez), 'base_box')
+write_box(minx,miny,maxx,maxy-bottomSquiggleYHeight/2, globalMaxes[2] - globalMinis[2], np.median(basez), 'base_box')
 
 
 
-write_box(minx+5,miny,maxx-5,maxy, height*5, -height*2, 'intersect2');
+write_box(minx+5,miny + 35,maxx-5,maxy, height*5, -height*2, 'intersect2');
 
 
-print('height {}'.format(height))
-print('miny {}'.format(miny))
-print('maxy {}'.format(maxy))
-intersect_face = create_intersect_face(minx, 0, maxx, height)
-intersect_poly = Polygon(intersect_face)
-intersect_mesh = trimesh.creation.extrude_polygon(intersect_poly, (maxy - miny)+height)
+#print('height {}'.format(height))
+#print('miny {}'.format(miny))
+#print('maxy {}'.format(maxy))
+#intersect_face = create_intersect_face(minx, 0, maxx, height)
+#intersect_poly = Polygon(intersect_face)
+#intersect_mesh = trimesh.creation.extrude_polygon(intersect_poly, (maxy - miny)+height)
 
-intersect_mesh.apply_transform(translate_down_3d(miny-height))
-intersect_mesh.apply_transform(rotation_matrix_3d(-90))
-
-
-print("writing {}/intersect.stl".format(outputDir))
-intersect_mesh.export('{}/intersect.stl'.format(outputDir))
+#intersect_mesh.apply_transform(translate_down_3d(miny-height))
+#intersect_mesh.apply_transform(rotation_matrix_3d(-90))
 
 
-#mesh2.apply_scale(1.1)
-#scene.export('output.stl', file_type='jpg')
-#om.write_mesh('output.stl', mesh, binary=True)
+#print("writing {}/intersect.stl".format(outputDir))
+#intersect_mesh.export('{}/intersect.stl'.format(outputDir))
 
-
-## POST PROCESSING
-# Scale, translate
-# select all, join (A, CTRL-J)
-# Edit mode -> mesh -> cleanup -> remove doubles
