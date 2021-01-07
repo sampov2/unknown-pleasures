@@ -9,12 +9,14 @@ import pymesh;
 print("loading meshes")
 intersect = pymesh.load_mesh("/models/tilted/intersect2.stl")
 
-meshes = []
+base_box = pymesh.load_mesh("/models/tilted/base_box.stl")
+
+meshes = [ base_box ]
 for n in range(1,79): ## TODO: 79
 	tmp = pymesh.load_mesh("/models/tilted/{}.stl".format(n))
 	meshes.append(tmp)
 
-print("combining squigglies")
+print("combining squigglies + base_box")
 united_swirls = pymesh.CSGTree({"union": list(map(lambda x : { "mesh": x}, meshes))}).mesh
 
 print("calculating intersect to clean up squigglies")

@@ -242,15 +242,6 @@ def rotation_matrix_3d(deg):
 
 rotation_matrix = rotation_matrix_3d(15)
 
-
-#zz = euler2mat(rot, 0, 0)
-#print(zz)
-
-minx =  100000
-maxx = -100000
-miny =  100000
-maxy = -100000
-
 leftMaxX = -100000
 rightMinX = 100000
 
@@ -303,11 +294,15 @@ def clean_bottom_and_extend(points2d, yExtension):
 
 	return points2d
 
+basez = np.array([])
+
+globalMaxes = None
+globalMinis = None
+
 for i in range(0, len(objects)):
 
 	obj = objects[i]
-	#print('object #{}: miny = {}, height = {}'.format(i, obj['miny'], obj['maxy']-obj['miny']))
-	#print('#{}, maxy = {}'.format(i, obj['maxy']))
+
 	points2d = obj['points2d']
 	adjusted_points = []
 
@@ -322,21 +317,11 @@ for i in range(0, len(objects)):
 
 	try:
 		mesh = trimesh.creation.extrude_polygon(polygon.simplify(.5, preserve_topology=True), height)
-		for point in points2d:
-			x = -point[0]
-			y = point[1]
-
-			minx = min(minx, x)
-			maxx = max(maxx, x)
-			miny = min(miny, y)
-			maxy = max(maxy, y)
 
 	except Exception as e:
 		print('!!! error with polygon #{}: {}'.format(i,e))
-		print(adjusted_points)
+		#print(adjusted_points)
 		continue
-
-	print('#{}, obj["maxy"] = {}, maxy = {}'.format(i, round(obj['maxy'],2), round(maxy, 2)))
 
 	translate_center = ((1, 0, 0, 0),
 						(0, 1, 0, -yPos),
@@ -352,8 +337,32 @@ for i in range(0, len(objects)):
 	mesh.apply_transform(translate_center)
 	mesh.apply_transform(rotation_matrix)
 	mesh.apply_transform(translate_back)
+
+	localMinis = np.minimum.reduce(mesh.vertices)
+	localMaxes = np.maximum.reduce(mesh.vertices)
+
+	if globalMinis is None:
+		globalMinis = localMinis
+	else:
+		globalMinis = np.minimum.reduce([localMinis, globalMinis])
+
+	if globalMaxes is None:
+		globalMaxes = localMaxes
+	else:
+		globalMaxes = np.maximum.reduce([localMaxes, globalMaxes])
+
+	# Find the point at local maximum y and take note of the z coordinate
+	for point in mesh.vertices:
+		if point[1] == localMaxes[1]:
+			basez = np.append(basez, point[2])
+			break
+
 	#print("writing {}/{}.stl".format(outputDir, i))
 	mesh.export('{}/{}.stl'.format(outputDir, i))
+
+print(' globalMinis = {}'.format(globalMinis))
+print(' globalMaxes = {}'.format(globalMaxes))
+print(' basez = {}'.format(basez))
 
 def translate_down_3d(n):
 	return ((1, 0, 0, 0),
@@ -368,7 +377,13 @@ def write_box(minx, miny, maxx, maxy, height, yOffset, filename):
 	print("writing {}/{}.stl".format(outputDir, filename))
 	mesh.export('{}/{}.stl'.format(outputDir, filename))
 
-write_box(minx,miny,maxx,maxy, height, height/3, 'base_box')
+
+minx = globalMinis[0]
+maxx = globalMaxes[0]
+miny = globalMinis[1]
+maxy = globalMaxes[1]
+print('base box height {}'.format(height))
+write_box(minx,miny,maxx,maxy, height, np.median(basez), 'base_box')
 
 write_box(minx+5,miny,maxx-5,maxy, height*5, -height*2, 'intersect2');
 
