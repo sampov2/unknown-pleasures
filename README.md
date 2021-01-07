@@ -22,11 +22,5 @@ NOTE! The docker container is based on `pymesh/pymesh` and image id `967a56ffb4e
 Before running steps, ensure the directory `tilted/` exists
 
 1. `docker run -it --rm -v $PWD:/models pymesh-unknown-pleasures python /models/tilt_process.py` - read `original/drawing-3.svg` and produces files in `tilted/` (one stl per squiggle and intersect2.stl)
-2. `docker run -it --rm -v $PWD:/models pymesh-unknown-pleasures python /models/next_gen.py` - combines squiggles to `next_gen_output.stl`
-3. `docker run -it --rm -v $PWD:/models pymesh-unknown-pleasures python /models/next_gen_extrude.py` - extrude previous output to `next_gen_output_extruded.stl`
-
-try to remove the bottom and extrude the top face down
-
-
-
-NEXT: create `shell` (=inner flexible mould) for object. To do this, do not attempt to create a shell, but instead create box for the outer mould, then carve out the "slot" for the inner mould and use boolean operators to formulate the "shell"
+2. `docker run -it --rm -v $PWD:/models pymesh-unknown-pleasures python /models/next_gen.py` - combines squiggles to `unknown_pleasures_positive.stl`
+3. `docker run -it --rm -v $PWD:/models pymesh-unknown-pleasures python /models/next_gen_moulds.py` - produce inner and outer moulds from the positive (`unknown_pleasures_inner_mould.stl` and `unknown_pleasures_outer_mould.stl`)
