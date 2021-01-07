@@ -29,6 +29,7 @@ print(axis_info)
 
 outer_mould_thickness = 10
 inner_mould_thickness = 10
+gap_between_moulds = .5
 
 def gen_box(axis_info, thickness, mould_top_rel, draft_angle=0.0):
 	mould_top = axis_info['min'][depth_axis] + (axis_info['max'][depth_axis] - axis_info['min'][depth_axis]) * mould_top_rel
@@ -81,9 +82,11 @@ def gen_box(axis_info, thickness, mould_top_rel, draft_angle=0.0):
 	return box
 
 inner_mould = gen_box(axis_info, inner_mould_thickness, .7, draft_angle=3)
-outer_mould = gen_box(axis_info, inner_mould_thickness + outer_mould_thickness, .7)
 
-outer_mould = pymesh.boolean(outer_mould, inner_mould, operation="difference")
+inner_mould_plus_gap = gen_box(axis_info, inner_mould_thickness + gap_between_moulds, .7, draft_angle=3)
+outer_mould = gen_box(axis_info, inner_mould_thickness + outer_mould_thickness + gap_between_moulds, .7)
+
+outer_mould = pymesh.boolean(outer_mould, inner_mould_plus_gap, operation="difference")
 inner_mould = pymesh.boolean(inner_mould, mesh, operation="difference")
 
 print("writing output")
