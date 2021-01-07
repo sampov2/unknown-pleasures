@@ -296,23 +296,51 @@ def clean_bottom_and_extend(points2d, yExtension):
 
 basez = np.array([])
 
+inputXrange = None
+inputLastYMin = None
+
 globalMaxes = None
 globalMinis = None
 
-for i in range(0, len(objects)):
+# Loop through objects + one filler
+for i in range(0, len(objects) + 1):
 
-	obj = objects[i]
 
-	points2d = obj['points2d']
 	adjusted_points = []
+	if i < len(objects):
+		obj = objects[i]
 
-	## This stretching bugs out
-	yThreshold = obj['maxy']-1
-	points2d = clean_bottom_and_extend(points2d, yExtension)
-	for point in points2d:
-		x = -point[0]
-		y = point[1]
-		adjusted_points.append([x, y])
+
+		points2d = obj['points2d']
+
+		points2d = clean_bottom_and_extend(points2d, yExtension)
+		inputLastYMin = None
+		for point in points2d:
+			x = -point[0]
+			y = point[1]
+			if inputXrange is None:
+				inputXrange = [x, x]
+			else:
+				inputXrange = [min(inputXrange[0],x ), max(inputXrange[1], x)]
+			if inputLastYMin is None:
+				inputLastYMin = y
+			else:
+				inputLastYMin = min(inputLastYMin, y)
+			adjusted_points.append([x, y])
+	else:
+		c1x = inputXrange[0]
+		c1y = inputLastYMin - yStep * (len(objects) - 5)
+		c2x = inputXrange[1]
+		c2y = c1y - yStep * 7
+		#c2y = inputLastYMin - yStep * (len(objects) + 1)
+
+		adjusted_points.append([c1x,c1y])
+		adjusted_points.append([c2x,c1y])
+		adjusted_points.append([c2x,c2y])
+		adjusted_points.append([c1x,c2y])
+
+		yPos = yPos - yStep * (len(objects) + 2)
+
 	polygon = Polygon(adjusted_points)
 
 	try:
@@ -383,7 +411,9 @@ maxx = globalMaxes[0]
 miny = globalMinis[1]
 maxy = globalMaxes[1]
 print('base box height {}'.format(height))
-write_box(minx,miny,maxx,maxy, height, np.median(basez), 'base_box')
+write_box(minx,miny,maxx,maxy, globalMaxes[2] - globalMinis[2], np.median(basez), 'base_box')
+
+
 
 write_box(minx+5,miny,maxx-5,maxy, height*5, -height*2, 'intersect2');
 

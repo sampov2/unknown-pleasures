@@ -12,7 +12,7 @@ intersect = pymesh.load_mesh("/models/tilted/intersect2.stl")
 base_box = pymesh.load_mesh("/models/tilted/base_box.stl")
 
 meshes = [ base_box ]
-for n in range(1,79): ## TODO: 79
+for n in range(0,81):
 	tmp = pymesh.load_mesh("/models/tilted/{}.stl".format(n))
 	meshes.append(tmp)
 
