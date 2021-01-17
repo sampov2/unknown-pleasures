@@ -6,17 +6,23 @@
 
 import pymesh;
 
+include_top = False
+
 print("loading meshes")
 intersect = pymesh.load_mesh("/models/tilted/intersect2.stl")
 
 base_box = pymesh.load_mesh("/models/tilted/base_box.stl")
+base_box2 = pymesh.load_mesh("/models/tilted/base_box2.stl")
 
-meshes = [ base_box ]
+meshes = [ base_box, base_box2 ]
+
 for n in range(0,81):
+	if n == 80 and not include_top:
+		continue
 	tmp = pymesh.load_mesh("/models/tilted/{}.stl".format(n))
 	meshes.append(tmp)
 
-print("combining squigglies + base_box")
+print("combining squigglies + base_boxes")
 united_swirls = pymesh.CSGTree({"union": list(map(lambda x : { "mesh": x}, meshes))}).mesh
 
 print("calculating intersect to clean up squigglies")

@@ -238,9 +238,24 @@ def rotation_matrix_3d(deg):
 		(0, math.cos(rot), -math.sin(rot), 0),
 		(0, math.sin(rot), math.cos(rot),  0),
 		(0, 0,             0,              1)
-		);
+		)
 
-rotation_matrix = rotation_matrix_3d(15)
+def skew_matrix_3d(deg):
+	rot = deg * math.pi / 180	
+	return (
+		(1,  0,             0,  0),
+		(0,  1,             0,  0),
+		(0,  math.tan(rot), 1,  0),
+		(0,  0,             0,  1)
+		)
+
+squiggle_angle = 15
+squiggle_draft_angle = 5
+
+rotation_matrix = rotation_matrix_3d(squiggle_angle)
+
+rotation_matrix2 = rotation_matrix_3d(-(squiggle_angle-squiggle_draft_angle))
+skew_matrix = skew_matrix_3d(squiggle_angle-squiggle_draft_angle)
 
 leftMaxX = -100000
 rightMinX = 100000
@@ -295,6 +310,7 @@ def clean_bottom_and_extend(points2d, yExtension):
 	return points2d
 
 basez = np.array([])
+basez79 = None
 
 inputXrange = None
 inputLastYMin = None
@@ -303,6 +319,9 @@ bottomSquiggleYHeight = None
 
 globalMaxes = None
 globalMinis = None
+
+maximumLocalMinis = None
+minimumLocalMaxes = None
 
 # Loop through objects + one filler, note that the filler is put on the top, but squiggle order is actually top (0) to bottom (79)
 for i in range(0, len(objects) + 1):
@@ -367,11 +386,15 @@ for i in range(0, len(objects) + 1):
 						(0, 0, 1, 0),
 						(0, 0, 0, 1))
 
+	## TODO: add shear / skew matrix
+
 	yPos = yPos + yStep
 
+	mesh.apply_transform(skew_matrix)
 	mesh.apply_transform(translate_center)
 	mesh.apply_transform(rotation_matrix)
 	mesh.apply_transform(translate_back)
+	mesh.apply_transform(rotation_matrix2)
 
 	localMinis = np.minimum.reduce(mesh.vertices)
 	localMaxes = np.maximum.reduce(mesh.vertices)
@@ -386,10 +409,22 @@ for i in range(0, len(objects) + 1):
 	else:
 		globalMaxes = np.maximum.reduce([localMaxes, globalMaxes])
 
+	if maximumLocalMinis is None:
+		maximumLocalMinis = localMinis
+	else:
+		maximumLocalMinis = np.maximum.reduce([localMinis, maximumLocalMinis])
+
+	if minimumLocalMaxes is None:
+		minimumLocalMaxes = localMaxes
+	else:
+		minimumLocalMaxes = np.minimum.reduce([localMaxes, minimumLocalMaxes])
+
 	# Find the point at local maximum y and take note of the z coordinate
 	for point in mesh.vertices:
 		if point[1] == localMaxes[1]:
 			basez = np.append(basez, point[2])
+			if i == 79:
+				basez79 = point[2]
 			break
 
 	if i == 79:
@@ -421,7 +456,13 @@ maxx = globalMaxes[0]
 miny = globalMinis[1]
 maxy = globalMaxes[1]
 print('base box height {}'.format(height))
-write_box(minx,miny,maxx,maxy-bottomSquiggleYHeight/2, globalMaxes[2] - globalMinis[2], np.median(basez), 'base_box')
+
+write_box(minx,minimumLocalMaxes[1],maxx,maxy-bottomSquiggleYHeight/2, globalMaxes[2] - globalMinis[2], np.median(basez), 'base_box')
+
+print('basez = {}, basez79 = {}'.format(basez, basez79))
+write_box(minx,maxy-bottomSquiggleYHeight/2,maxx,maxy, globalMaxes[2] - globalMinis[2] +np.median(basez) - basez79, basez79, 'base_box2')
+
+#write_box(minx,miny,maxx,maxy-bottomSquiggleYHeight/2, globalMaxes[2] - globalMinis[2], np.median(basez), 'base_box')
 
 
 
