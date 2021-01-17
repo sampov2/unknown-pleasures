@@ -227,7 +227,7 @@ print('xmin range = {} .. {}'.format(minMinY, maxMinY))
 yStep = (maxMinY - minMinY) / len(objects)
 yPos = minMinY
 
-height = 120
+height = 160
 yExtension = 20
 
 # Scaling would be nice, but we cannot do it individually...
