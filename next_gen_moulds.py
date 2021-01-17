@@ -81,10 +81,10 @@ def gen_box(axis_info, thickness, mould_top_rel, draft_angle=0.0):
 
 	return box
 
-inner_mould = gen_box(axis_info, inner_mould_thickness, .7, draft_angle=3)
+inner_mould = gen_box(axis_info, inner_mould_thickness, .58, draft_angle=3)
 
-inner_mould_plus_gap = gen_box(axis_info, inner_mould_thickness + gap_between_moulds, .7, draft_angle=3)
-outer_mould = gen_box(axis_info, inner_mould_thickness + outer_mould_thickness + gap_between_moulds, .7)
+inner_mould_plus_gap = gen_box(axis_info, inner_mould_thickness + gap_between_moulds, .58, draft_angle=3)
+outer_mould = gen_box(axis_info, inner_mould_thickness + outer_mould_thickness + gap_between_moulds, .58)
 
 outer_mould = pymesh.boolean(outer_mould, inner_mould_plus_gap, operation="difference")
 inner_mould = pymesh.boolean(inner_mould, mesh, operation="difference")
