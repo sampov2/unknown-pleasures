@@ -92,3 +92,12 @@ inner_mould = pymesh.boolean(inner_mould, mesh, operation="difference")
 print("writing output")
 pymesh.save_mesh("/models/unknown_pleasures_outer_mould.stl", outer_mould)
 pymesh.save_mesh("/models/unknown_pleasures_inner_mould.stl", inner_mould)
+
+positive_width  = axis_info['max'][0]-axis_info['min'][0]
+positive_height = axis_info['max'][1]-axis_info['min'][1]
+
+print("positive width {:.2f}, height {:.2f}".format(positive_width, positive_height))
+
+print("inner mould thickness {} units ({:.2f}% of width, {:.2f}% of height)".format(inner_mould_thickness,100 * inner_mould_thickness / positive_width, 100* inner_mould_thickness / positive_height))
+print("outer mould thickness {} units ({:.2f}% of width, {:.2f}% of height)".format(outer_mould_thickness,100 * outer_mould_thickness / positive_width, 100* outer_mould_thickness / positive_height))
+
