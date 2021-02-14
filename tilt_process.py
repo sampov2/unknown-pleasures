@@ -472,8 +472,8 @@ write_box(minx,maxy-bottomSquiggleYHeight/2,maxx,maxy, globalMaxes[2] - globalMi
 
 
 #write_box(minx+5,miny + 35,maxx-5,maxy, height*5, -height*2, 'intersect2');
-write_box(minx+5,miny + 10,maxx-5,maxy-5, height*5, -height*2, 'intersect2');
-
+write_box(minx+5,miny + 20,maxx-5,maxy-25, height*5, -height*2, 'intersect2');
+#                top part         bottom
 
 #print('height {}'.format(height))
 #print('miny {}'.format(miny))

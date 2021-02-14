@@ -29,7 +29,7 @@ print(axis_info)
 
 outer_mould_thickness = 10
 inner_mould_thickness = 10
-face_mould_thickness = 60
+face_mould_thickness = 53
 gap_between_moulds = .5
 
 def gen_box(axis_info, thickness, mould_top_rel, draft_angle=0.0, extra_depth=0.0, depth_offset=0.0):
