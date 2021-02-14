@@ -397,7 +397,7 @@ for i in range(0, len(objects) + 1):
 	else:
 		translate_depth = ((1, 0, 0, 0),
 						   (0, 1, 0, 0),
-						   (0, 0, 1, squiggle_angle), ## This just happens to be about the right amount of translation at 15 deg, might wig out on you!
+						   (0, 0, 1, 12.0), ## 12.0 just happens to be about right
 						   (0, 0, 0, 1))
 		mesh.apply_transform(translate_depth)
 
