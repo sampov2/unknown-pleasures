@@ -6,7 +6,7 @@
 
 import pymesh;
 
-include_top = False
+include_top = True
 
 print("loading meshes")
 intersect = pymesh.load_mesh("/models/tilted/intersect2.stl")

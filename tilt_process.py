@@ -250,7 +250,7 @@ def skew_matrix_3d(deg):
 		)
 
 squiggle_angle = 15
-squiggle_draft_angle = 5
+squiggle_draft_angle = 10
 
 rotation_matrix = rotation_matrix_3d(squiggle_angle)
 
@@ -325,7 +325,7 @@ minimumLocalMaxes = None
 
 # Loop through objects + one filler, note that the filler is put on the top, but squiggle order is actually top (0) to bottom (79)
 for i in range(0, len(objects) + 1):
-
+	#print("i = {}".format(i))
 	adjusted_points = []
 	if i < len(objects):
 		obj = objects[i]
@@ -386,15 +386,20 @@ for i in range(0, len(objects) + 1):
 						(0, 0, 1, 0),
 						(0, 0, 0, 1))
 
-	## TODO: add shear / skew matrix
-
 	yPos = yPos + yStep
 
-	mesh.apply_transform(skew_matrix)
-	mesh.apply_transform(translate_center)
-	mesh.apply_transform(rotation_matrix)
-	mesh.apply_transform(translate_back)
-	mesh.apply_transform(rotation_matrix2)
+	if i != 80:
+		mesh.apply_transform(skew_matrix)
+		mesh.apply_transform(translate_center)
+		mesh.apply_transform(rotation_matrix)
+		mesh.apply_transform(translate_back)
+		mesh.apply_transform(rotation_matrix2)
+	else:
+		translate_depth = ((1, 0, 0, 0),
+						   (0, 1, 0, 0),
+						   (0, 0, 1, squiggle_angle), ## This just happens to be about the right amount of translation at 15 deg, might wig out on you!
+						   (0, 0, 0, 1))
+		mesh.apply_transform(translate_depth)
 
 	localMinis = np.minimum.reduce(mesh.vertices)
 	localMaxes = np.maximum.reduce(mesh.vertices)
@@ -466,7 +471,8 @@ write_box(minx,maxy-bottomSquiggleYHeight/2,maxx,maxy, globalMaxes[2] - globalMi
 
 
 
-write_box(minx+5,miny + 35,maxx-5,maxy, height*5, -height*2, 'intersect2');
+#write_box(minx+5,miny + 35,maxx-5,maxy, height*5, -height*2, 'intersect2');
+write_box(minx+5,miny + 10,maxx-5,maxy-5, height*5, -height*2, 'intersect2');
 
 
 #print('height {}'.format(height))

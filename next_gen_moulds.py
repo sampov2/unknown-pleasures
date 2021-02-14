@@ -29,10 +29,11 @@ print(axis_info)
 
 outer_mould_thickness = 10
 inner_mould_thickness = 10
+face_mould_thickness = 100
 gap_between_moulds = .5
 
-def gen_box(axis_info, thickness, mould_top_rel, draft_angle=0.0):
-	mould_top = axis_info['min'][depth_axis] + (axis_info['max'][depth_axis] - axis_info['min'][depth_axis]) * mould_top_rel
+def gen_box(axis_info, thickness, mould_top_rel, draft_angle=0.0, extra_depth=0.0):
+	mould_top = axis_info['min'][depth_axis] + (axis_info['max'][depth_axis] - axis_info['min'][depth_axis]) * mould_top_rel + extra_depth
 
 	box = pymesh.generate_box_mesh([
 		axis_info['min'][0] - thickness,
@@ -45,7 +46,7 @@ def gen_box(axis_info, thickness, mould_top_rel, draft_angle=0.0):
 	])
 
 	alpha = draft_angle
-	box_height = abs(mould_top -  (axis_info['min'][2] - thickness))
+	box_height = abs(mould_top -  (axis_info['min'][2] - thickness)) + extra_depth
 	if abs(alpha) > 0:
 		beta = 180 - 90 - alpha
 		#a = box_height
@@ -89,9 +90,14 @@ outer_mould = gen_box(axis_info, inner_mould_thickness + outer_mould_thickness +
 outer_mould = pymesh.boolean(outer_mould, inner_mould_plus_gap, operation="difference")
 inner_mould = pymesh.boolean(inner_mould, mesh, operation="difference")
 
+face_mould = gen_box(axis_info, 0, 0, extra_depth=face_mould_thickness)
+face_mould = pymesh.boolean(face_mould, mesh, operation="difference")
+
 print("writing output")
 pymesh.save_mesh("/models/unknown_pleasures_outer_mould.stl", outer_mould)
 pymesh.save_mesh("/models/unknown_pleasures_inner_mould.stl", inner_mould)
+pymesh.save_mesh("/models/unknown_pleasures_face_mould.stl", face_mould)
+
 
 positive_width  = axis_info['max'][0]-axis_info['min'][0]
 positive_height = axis_info['max'][1]-axis_info['min'][1]
